@@ -52,7 +52,7 @@ while PAGE < DATA_LOADS['pages']:
         VAC_DUMPS = json.dumps(ITEM)
         VAC_LOADS = json.loads(VAC_DUMPS)
         av = VAC_LOADS['id']
-        VAC_IDs_ACTUAL[vID] = str(av)
+        VAC_IDs_ACTUAL[vID] = int(av)
         #VACANCIES[ITEM['id']] = ITEM
         vID += 1
     PAGE += 1
@@ -68,7 +68,7 @@ try:
     vID = 0
     for i in a:
         #print i[0]
-        VAC_IDs_DB[vID] = str(i[0])
+        VAC_IDs_DB[vID] = int(i[0])
         vID += 1
     cursor.close()
 except psycopg2.DataError, exception:
@@ -104,7 +104,7 @@ try:
         RESP = requests.get(VACANCY_URL + str(VAC_IDs_ACTUAL[row]))
         VAC_BASE = json.loads(RESP.text)
         qIsExists = 'SELECT EXISTS(SELECT * FROM hh.vacancies WHERE vac_id = %s)' % (VAC_BASE['id'].encode('utf-8'))
-        print qIsExists
+        #print qIsExists
         cursor.execute(qIsExists)
         if cursor.fetchone()[0] == False:
             VACANCY_KEY_SKILLS = ""
