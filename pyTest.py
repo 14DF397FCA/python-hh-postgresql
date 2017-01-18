@@ -1,14 +1,21 @@
 import json
 import requests
 import csv
-import sys
 import os.path
-reload(sys)
-sys.setdefaultencoding('utf-8')
+import tempfile
+# import sys
+# reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 VACANCIES_URL = 'https://api.hh.ru/vacancies?clusters=false&specialization=1&area=2&only_with_salary=true&per_page=100&page='
 VACANCY_URL = "https://api.hh.ru/vacancies/"
-CSVFILENAME = "pyTest.csv"
+TEMPF = tempfile.gettempdir()
+if TEMPF[1] == ':':
+    CSVFILENAME = TEMPF + "\\" + "pyTest.csv"
+else:
+    CSVFILENAME = TEMPF + "/" + "pyTest.csv"
+print(CSVFILENAME)
+quit()
 
 if os.path.exists(CSVFILENAME) == False:
     with open(CSVFILENAME, 'w') as outFile:
@@ -45,7 +52,7 @@ def vacancyisremoved(vacancy_id, filename):
 
 rows = {}
 #   Read already exist vacancies
-print "Read already exist vacancies"
+print("Read already exist vacancies")
 with open(CSVFILENAME, 'rb') as CSVFILE:
     VACANCIES_REMOVED_ID = 0
     rreader = csv.reader(CSVFILE, dialect='excel')
@@ -57,7 +64,7 @@ with open(CSVFILENAME, 'rb') as CSVFILE:
             VACANCIES_REMOVED_ID += 1
 
 # Add new vacancies
-print "Add new vacancies"
+print("Add new vacancies")
 with open(CSVFILENAME, 'a') as CSVFILE:
     wwriter = csv.writer(CSVFILE, dialect='excel')
     for i in VACANCIES:
@@ -75,10 +82,10 @@ with open(CSVFILENAME, 'a') as CSVFILE:
         # VACANCY_COUNT = len(VACANCY_DATA['specializations'])
         # if VACANCY_COUNT > 0:
         # for PROFAREA in range(VACANCY_COUNT):
-        # print VACANCY_DATA['specializations'][PROFAREA]['profarea_id']
-        # print VACANCY_DATA['specializations'][PROFAREA]['profarea_name']
-        # print VACANCY_DATA['specializations'][PROFAREA]['id']
-        # print VACANCY_DATA['specializations'][PROFAREA]['name']
+        # print(VACANCY_DATA['specializations'][PROFAREA]['profarea_id']
+        # print(VACANCY_DATA['specializations'][PROFAREA]['profarea_name']
+        # print(VACANCY_DATA['specializations'][PROFAREA]['id']
+        # print(VACANCY_DATA['specializations'][PROFAREA]['name']
 
         if 'address''city' not in VACANCY_DATA:
             VACANCY_ADDRESS_CITY = "Null"
@@ -115,7 +122,7 @@ with open(CSVFILENAME, 'a') as CSVFILE:
             VACANCY_EMPLOYER_ID = VACANCY_DATA['employer']['id'].encode('utf-8')
             VACANCY_EMPLOYER_NAME = VACANCY_DATA['employer']['name'].encode('utf-8')
 
-        print VACANCY_URL + str(VACANCY_LOADS['id'].encode('utf-8'))
+        print(VACANCY_URL + str(VACANCY_LOADS['id'].encode('utf-8')))
         wwriter.writerow([
             VACANCY_LOADS['id'].encode('utf-8'),
             VACANCY_LOADS['name'].encode('utf-8'),
@@ -147,7 +154,7 @@ with open(CSVFILENAME, 'a') as CSVFILE:
         ])
 
 # Mark removed vacancies
-print "Mark removed vacancies"
+print("Mark removed vacancies")
 VACANCY_REMOVED_ID = 0
 while VACANCY_REMOVED_ID < len(VACANCIES_REMOVED):
     vacancyisremoved(VACANCIES_REMOVED[VACANCY_REMOVED_ID], CSVFILENAME)

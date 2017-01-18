@@ -2,9 +2,9 @@
 import requests
 import psycopg2
 import json
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+# import sys
+# reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 dbname = 'hh'
 dbuser = 'python'
@@ -51,22 +51,22 @@ try:
                            ");"
             cursor.execute(qCreateTable)
             connect.commit()
-        except psycopg2.DataError, exception:
-            print exception
-except psycopg2.DataError, exception:
-    print exception
+        except psycopg2.DataError as exception:
+            print(exception)
+except psycopg2.DataError as exception:
+    print(exception)
 
 
 def markvacancyremoved(vacancy_id):
     try:
         connect = psycopg2.connect(database=dbname, user=dbuser, password=dbpass)
         cursor = connect.cursor()
-        qUpdate = 'UPDATE hh.vacancies SET active = False WHERE vac_id = %s' % vacancy_id
+        qUpdate = 'UPDATE hh.vacancies SET active = False WHERE vac_id = %s' % int(vacancy_id)
         cursor.execute(qUpdate)
         connect.commit()
         cursor.close()
-    except psycopg2.DataError, exception:
-        print exception
+    except psycopg2.DataError as exception:
+        print(exception)
     finally:
         if connect:
             connect.close()
@@ -93,50 +93,60 @@ try:
         VAC_IDs_DB[vID] = int(row[0])
         vID += 1
     cursor.close()
-except psycopg2.DataError, exception:
-    print exception
+except psycopg2.DataError as exception:
+    print(exception)
 finally:
     if connect:
         connect.close()
 
 vID = 0
-for vID in range(len(VAC_IDs_DB)):
+
+# for vID in range(len(VAC_IDs_DB)):
+    # print(str(len(VAC_IDs_ACTUAL)))
+    # print(str(vID))
+while vID < len(VAC_IDs_DB):
     if VAC_IDs_DB[vID] in VAC_IDs_ACTUAL.values():
-        print "Vacancy with vID (%s) is active and already exist in database, remove it from the list" % (VAC_IDs_DB[vID])
+        #print("Vacancy with vID (%s) is active and already exist in database, remove it from the list" % (VAC_IDs_DB[vID]))
         #VAC_IDs_ACTUAL.pop(vID)
-        #print VAC_IDs_ACTUAL[vID]
-        del VAC_IDs_ACTUAL[vID]
-        #print VAC_IDs_ACTUAL
+        #print(VAC_IDs_ACTUAL[vID]
+        print(vID)
+        # del VAC_IDs_ACTUAL[vID]
+        # VAC_IDs_ACTUAL[vID] = 0
+        print(VAC_IDs_ACTUAL[vID])
+        print("-------------")
+        #print(VAC_IDs_ACTUAL
         # quit()
     else:
-        print "Vacancy with vID (%s) does not available in the list, mark as removed in DB" % (VAC_IDs_DB[vID])
+        #print("Vacancy with vID (%s) does not available in the list, mark as removed in DB" % (VAC_IDs_DB[vID]))
         # VAC_IDs_OLD[len(VAC_IDs_OLD) + 1] = VAC_IDs_DB[vID]
         markvacancyremoved(VAC_IDs_DB[vID])
-    print VACANCY_URL + str(VAC_IDs_DB[vID])
-    print "----------------"
+    #print(VACANCY_URL + str(VAC_IDs_DB[vID]))
+    #print("----------------")
     vID += 1
-
-print VAC_IDs_ACTUAL
-print VAC_IDs_DB
-print VAC_IDs_OLD
+# print(VAC_IDs_ACTUAL)
+quit()
+# print(VAC_IDs_ACTUAL)
+# print(VAC_IDs_DB)
+# print(VAC_IDs_OLD)
 
 def importdataindb():
     vID = 0
     try:
         connect = psycopg2.connect(database=dbname, user=dbuser, password=dbpass)
         cursor = connect.cursor()
+        #print(VAC_IDs_ACTUAL)
         for row in VAC_IDs_ACTUAL:
+            #print(VAC_IDs_ACTUAL[row])
             RESP = requests.get(VACANCY_URL + str(VAC_IDs_ACTUAL[row]))
             VAC_BASE = json.loads(RESP.text)
-            qIsExists = 'SELECT EXISTS(SELECT * FROM hh.vacancies WHERE vac_id = %s)' % (VAC_BASE['id'].encode('utf-8'))
+            qIsExists = 'SELECT EXISTS(SELECT * FROM hh.vacancies WHERE vac_id = %s);' % int(VAC_BASE['id'])
             cursor.execute(qIsExists)
             if cursor.fetchone()[0] == False:
                 VACANCY_KEY_SKILLS = ""
                 VACANCY_COUNT = len(VAC_BASE['key_skills'])
                 if VACANCY_COUNT > 0:
                     for KEY_SKILL in range(VACANCY_COUNT):
-                        VACANCY_KEY_SKILLS += VAC_BASE['key_skills'][KEY_SKILL]['name'].encode('utf-8') + ";".encode(
-                            'utf-8')
+                        VACANCY_KEY_SKILLS += VAC_BASE['key_skills'][KEY_SKILL]['name'] + ";"
                 qAddVacancy = "INSERT INTO hh.vacancies VALUES (" \
                               "\'%s\', " \
                               "\'%s\', " \
@@ -158,32 +168,32 @@ def importdataindb():
                               "\'%s\', " \
                               "True" \
                               ");" % (
-                    VAC_BASE['id'].encode('utf-8'),
-                    VAC_BASE['name'].encode('utf-8'),
-                    VAC_BASE['alternate_url'].encode('utf-8'),
+                    int(VAC_BASE['id']),
+                    VAC_BASE['name'],
+                    VAC_BASE['alternate_url'],
                     VAC_BASE['premium'],
-                    VAC_BASE['description'].encode('utf-8'),
-                    VAC_BASE['schedule']['id'].encode('utf-8'),
-                    VAC_BASE['schedule']['name'].encode('utf-8'),
-                    VAC_BASE['experience']['id'].encode('utf-8'),
-                    VAC_BASE['experience']['name'].encode('utf-8'),
+                    VAC_BASE['description'],
+                    VAC_BASE['schedule']['id'],
+                    VAC_BASE['schedule']['name'],
+                    VAC_BASE['experience']['id'],
+                    VAC_BASE['experience']['name'],
                     json.dumps(VAC_BASE['address'], ensure_ascii=False),
                     VACANCY_KEY_SKILLS,
-                    VAC_BASE['employment']['id'].encode('utf-8'),
-                    VAC_BASE['employment']['name'].encode('utf-8'),
+                    VAC_BASE['employment']['id'],
+                    VAC_BASE['employment']['name'],
                     json.dumps(VAC_BASE['salary'], ensure_ascii=False),
-                    VAC_BASE['area']['id'].encode('utf-8'),
-                    VAC_BASE['area']['name'].encode('utf-8'),
+                    VAC_BASE['area']['id'],
+                    VAC_BASE['area']['name'],
                     json.dumps(VAC_BASE['employer'], ensure_ascii=False),
                     json.dumps(VAC_BASE['specializations'], ensure_ascii=False)
                 )
-                print vID, qAddVacancy
+                print(vID, qAddVacancy)
                 cursor.execute(qAddVacancy)
                 connect.commit()
             vID += 1
         cursor.close()
-    except psycopg2.DataError, exception:
-        print exception
+    except psycopg2.DataError as exception:
+        print(exception)
     finally:
         if connect:
             connect.close()
